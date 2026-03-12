@@ -144,7 +144,7 @@ int main(int argc, char **argv) {
 
 	char *filepath = NULL;
 	if (ast->is_valid) {
-		tac = tac_from_ast(ast);
+		TAC *tac = tac_from_ast(ast);
 		if (args.print_tac) {
 			tac_printf(tac);
 			return 0;

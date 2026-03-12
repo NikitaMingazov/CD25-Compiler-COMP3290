@@ -7,7 +7,7 @@ FRONTEND = threeaddresscode.c semantic_analysis.c astree.c parser.c lexer.c list
 INCLUDES = lib/linkedlist.c lib/sds.c lib/hashmap.c
 SOURCES = $(SM25_TARGET) $(X86_TARGET) main.c $(FRONTEND) $(INCLUDES)
 OBJECTS = $(SOURCES:.c=.o)
-TARGET = cd25c
+TARGET = build/cd25c
 
 all: $(TARGET)
 
