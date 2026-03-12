@@ -30,6 +30,7 @@ typedef struct instruction {
 
 typedef struct codegen {
 	ASTree *ast;
+	const char *out_filename;
 	FILE *out_file;
 	u16 inst_bytes;
 	LinkedList *instructions;
@@ -100,7 +101,8 @@ Codegen *codegen_create(const char *outfile, ASTree *ast) {
 	Codegen *temp = malloc(sizeof(Codegen));
 	*temp = (Codegen) {
 		ast,
-		fopen(outfile, "w"),
+		outfile,
+		0,
 		0, // inst_bytes
 		linkedlist_create(), // insts
 		0, // num_ints
@@ -125,7 +127,7 @@ Codegen *codegen_create(const char *outfile, ASTree *ast) {
 		linkedlist_create(), // function calls
 		1, // scope_of_main
 	};
-	if (!temp->out_file) {
+	if (!temp->out_filename) {
 		fprintf(stderr, "could not create module file\n");
 		abort();
 	}
@@ -195,7 +197,6 @@ void codegen_free(Codegen *cdg) {
 	linkedlist_free(cdg->instructions);
 	linkedlist_free(cdg->ints);
 	linkedlist_free(cdg->reals);
-	fclose(cdg->out_file);
 	linkedlist_free_ctx(cdg->int_offsets, noop_free_ctx);
 	linkedlist_free_ctx(cdg->real_offsets, noop_free_ctx);
 	linkedlist_free_ctx(cdg->str_offsets, noop_free_ctx);
@@ -205,6 +206,7 @@ void codegen_free(Codegen *cdg) {
 }
 
 void codegen_close(Codegen *cdg) {
+	cdg->out_file = fopen(cdg->out_filename, "w"),
 	fprintf(cdg->out_file, "%d\n", cdg->inst_bytes/8);
 	int printed_insts = 0;
 	Instruction *instr;
@@ -245,6 +247,7 @@ void codegen_close(Codegen *cdg) {
 		fprintf(cdg->out_file, "   0");
 		printed_chars++;
 	}
+	fclose(cdg->out_file);
 	codegen_free(cdg);
 }
 
