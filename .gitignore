@@ -7,3 +7,5 @@ ignore
 *.lst
 # clangd config
 compile_flags.txt
+# valgrind junk
+vgcore.*
