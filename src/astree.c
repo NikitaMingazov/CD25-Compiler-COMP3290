@@ -169,8 +169,11 @@ static void free_attribute(void *ptr) {
 	Attribute *atr = (Attribute *)ptr;
 	switch (atr->type) {
 		case SARRAY:
-		case SSTRUCT:
 			free(atr->data);
+			break;
+		case SSTRUCT:
+			/* free(atr->data); */
+			// is this not needed? or just skip this crap and move to arena allocation
 			break;
 		case SFIELDS:
 			linkedlist_free(atr->data);
@@ -182,6 +185,7 @@ static void free_attribute(void *ptr) {
 			if (atr->data)
 				linkedlist_free(atr->data);
 			break;
+		default: abort();
 	}
 	free(atr);
 }
