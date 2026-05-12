@@ -2,6 +2,7 @@
    aompiles a CD25 AST to SM25 bytecode
    does not use TAC, because it was out of scope of the uni project
 */
+#define _POSIX_C_SOURCE 200809L
 #include "x86_code_generation.h"
 #include "../threeaddresscode.h"
 #include "../lib/linkedlist.h"
@@ -9,6 +10,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include <limits.h>
+#include <libgen.h>
+#include <unistd.h>
 
 // to avoid relying on glibc extensions
 static int asprintf(char **strp, const char *fmt, ...)
@@ -40,15 +44,6 @@ static int asprintf(char **strp, const char *fmt, ...)
 
 	*strp = buf;
 	return len;
-}
-
-static char *strdup(const char *s)
-{
-	size_t len = strlen(s) + 1;
-	char *p = malloc(len);
-	if (p)
-		memcpy(p, s, len);
-	return p;
 }
 
 typedef struct x86_codegen {
@@ -511,6 +506,19 @@ void resolve_line(Codegen *cdg, Line *line) {
 			fprintf(out, "    pop rbp\n");
 			fprintf(out, "    ret\n");
 			break;
+		case O_ARRLEN:
+			// is used by arrcpy
+			break;
+		case O_ARRCPY:
+			print_binary(cdg, "mov", mkreg(rdi), get_reg(cdg, line->left));
+			print_binary(cdg, "mov", mkreg(rsi), get_reg(cdg, line->right));
+			// fetch the length of the array, which is in the previous instruction
+			linkedlist_back(cdg->tac->lines);
+			Adr arrlen = ((Line*)linkedlist_get_current(cdg->tac->lines))->left;
+			linkedlist_forward(cdg->tac->lines);
+			print_binary(cdg, "mov", mkreg(rdx), get_reg(cdg, arrlen));
+			fprintf(out, "    call memcpy\n");
+			break;
 		case O_FUNC:
 			fprintf(out, "    global %s\n", (char*)tac_data(cdg->tac, line->left));
 			fprintf(out, "%s:\n", (char*)tac_data(cdg->tac, line->left));
@@ -683,14 +691,22 @@ void x86_code_gen(char *dest_path, TAC* tac, char *source_name) {
 	fprintf(out, "    flttmp db \"%%lf\", 0\n");
 	fprintf(out, "    space db \" \", 0\n");
 	fprintf(out, "    newln db 10, 0\n");
-	fprintf(out, "    extern exit, stdout, fprintf, fopen, fgetc, atol, atof\n");
+	fprintf(out, "    extern exit, stdout, fprintf, fopen, fgetc, atol, atof, memcpy\n");
 	fprintf(out, "section .data\n");
 	fprintf(out, "    FILENAME db \"sm25stdin.txt\", 0\n"); // todo: take as an arg
-    fprintf(out, "    READMODE db \"r\", 0\n");
-    fprintf(out, "    EXITERROR db \"could not open in file, aborting\", 10\n");
-    fprintf(out, "    EXITERRORLEN equ $ - EXITERROR\n");
+	fprintf(out, "    READMODE db \"r\", 0\n");
+	fprintf(out, "    EXITERROR db \"could not open in file, aborting\", 10\n");
+	fprintf(out, "    EXITERRORLEN equ $ - EXITERROR\n");
 	fprintf(out, "section .text\n");
-	cat_to_file(out, "./inputlib.asm");
+	char lib_path[4096];
+
+	ssize_t len = readlink("/proc/self/exe",
+                           lib_path,
+                           sizeof(lib_path) - 1);
+	/* size_t len = readlink("/proc/self/exe", lib_path, sizeof(lib_path) - 1); */
+	lib_path[len] = '\0';
+	strcpy(lib_path, "./x86_codegen/inputlib.asm");
+	cat_to_file(out, lib_path);
 	print_code(&state);
 	fprintf(out, "    mov rdi, 0\n");
 	fprintf(out, "    call exit\n");

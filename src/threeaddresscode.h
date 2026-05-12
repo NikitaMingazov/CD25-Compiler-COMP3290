@@ -56,9 +56,11 @@ enum operation {
 	O_FUNC,
 	O_DEREF,
 	O_STORE,
+	O_ARRCPY,
+	O_ARRLEN,
 };
 
-static char print_op[51][14] = {
+static char print_op[53][14] = {
 	"print_i", "print_f", "print_str", "print_ln", "print_space",
 	"read_i", "read_f", "itof",
 	"label", "goto", "goto_if_true",  "goto_if_false", "alloc",
@@ -69,6 +71,7 @@ static char print_op[51][14] = {
 	"and", "or", "xor", "not",
 	"param", "call", "call_v", "return", "return value", "function",
 	"deref", "store",
+	"arrcpy", "arrlen",
 };
 
 enum adr_type {
@@ -88,9 +91,10 @@ static char adr_prefix[9][2] = {
 };
 
 /* enum val_type { */
+/*  v_u1, */
 /* 	v_u8, */
 /* 	v_u64, */
-/* 	v_f64, */
+/* 	v_i64, */
 /* }; */
 
 typedef struct address {

@@ -694,19 +694,13 @@ void tac_gen_nasgn(T_S *ts, ASTNode *node) {
 			}
 			break;
 		case SARRAY:
-			array_atr = astree_get_attribute(ts->ast, node->left_child->symbol_value);
-			int array_size = *(int*)hashmap_get(ts->array_len_map, array_atr->data);
-			// todo: inline loop with labels?
 			rhs = tac_get_adr(ts, node->right_child);
-			for (int i = 0; i < array_size; ++i) {
-				Adr tmp0 = mktmp(ts);
-				append_line(ts, ternary_line(O_ADDI, tmp0, lhs, adr_of_int(ts, i*8), node->row));
-				Adr tmp1 = mktmp(ts);
-				append_line(ts, ternary_line(O_ADDI, tmp1, rhs, adr_of_int(ts, i*8), node->row));
-				Adr tmp2 = mktmp(ts);
-				append_line(ts, binary_line(O_DEREF, tmp2, tmp1, node->row));
-				append_line(ts, binary_line(O_STORE, tmp0, tmp2, node->row));
-			}
+			Symbol *arrtype_name = astree_get_attribute(ts->ast, node->right_child->symbol_value)->data;
+			//TODO: this should not be needed, fix the scope assignment used above
+			arrtype_name->scope = 0;
+			int arrlen = *(int*)hashmap_get(ts->array_len_map, arrtype_name);
+			append_line(ts, unary_line(O_ARRLEN, adr_of_int(ts, arrlen), node->row));
+			append_line(ts, binary_line(O_ARRCPY, lhs, rhs, node->row));
 			break;
 		case SSTRUCT:
 			array_atr = astree_get_attribute(ts->ast, node->left_child->left_child->symbol_value);
@@ -1130,6 +1124,7 @@ int tac_gen_constint(T_S *ts, ASTNode* node) {
 	}
 }
 
+
 void tac_gen_arrtype(T_S *ts, ASTNode *node) {
 	Attribute *struct_atr = astree_get_attribute(ts->ast, node->symbol_value);
 	Attribute *struct_fields = astree_get_attribute(ts->ast, struct_atr->data);
@@ -1237,6 +1232,7 @@ void print_tac_line(Line *l) {
 		case O_PRINTI: case O_PRINTF: case O_PRINTSTR:
 		case O_LABEL: case O_GOTO:
 		case O_PARAM: case O_RVAL:
+		case O_ARRLEN:
 			printf("%s ", print_op[l->op]);
 			print_adr(l->left);
 			break;
@@ -1248,7 +1244,7 @@ void print_tac_line(Line *l) {
 		// binary void
 		case O_GOTOF: case O_GOTOT:
 		case O_CALL:
-		case O_STORE:
+		case O_STORE: case O_ARRCPY:
 			printf("%s ", print_op[l->op]);
 			print_adr(l->left);
 			printf(" ");
@@ -1356,6 +1352,7 @@ void* tac_data(TAC* tac, Adr adr) {
 			}
 			return linkedlist_get_current(tac->strings);
 		default:
+			fprintf(stderr, "Tried to access data of a %s\n", adr_prefix[adr.type]);
 			abort();
 	}
 }

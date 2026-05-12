@@ -184,7 +184,7 @@ int main(int argc, char **argv) {
 	} else {
 		return 1;
 	}
-	astree_free(ast);
+	// astree_free(ast);
 	return 0;
 }
 

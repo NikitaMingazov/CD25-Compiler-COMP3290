@@ -1,3 +1,5 @@
+There are memory leak fixes on a dead SSD that weren't pushed, sending to a lab either way.
+
 I'll probably never add these, but to put in writing:
 new functionality:
 $ dereferences, & is address-of
