@@ -6,7 +6,8 @@ X86_TARGET = x86_codegen/x86_code_generation.c
 FRONTEND = threeaddresscode.c semantic_analysis.c astree.c parser.c lexer.c lister.c
 INCLUDES = lib/linkedlist.c lib/sds.c lib/hashmap.c
 SOURCES = $(SM25_TARGET) $(X86_TARGET) main.c $(FRONTEND) $(INCLUDES)
-OBJECTS = $(SOURCES:.c=.o)
+SOURCES_LOC := $(addprefix src/, $(SOURCES))
+OBJECTS = $(SOURCES_LOC:.c=.o)
 TARGET = build/cd25c
 
 all: $(TARGET)
