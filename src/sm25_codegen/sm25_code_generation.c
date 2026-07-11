@@ -286,7 +286,7 @@ void sm25_printf(Codegen *cdg) {
 		instr_printf(instr, &cur_byte);
 		free(instr);
 	}
-	cur_byte += (8 - cur_byte) % 8; // simulating padding to match SM25
+	cur_byte += cur_byte % 8; // simulating padding to match SM25
 	printf( "%d\n", cdg->num_ints);
 	Symbol *const_sym;
 	while ( (const_sym = (Symbol *)linkedlist_pop_head(cdg->ints)) != NULL) {
