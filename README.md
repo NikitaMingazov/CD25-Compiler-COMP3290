@@ -14,7 +14,7 @@ The X86 language implementation has the same feature set.
 
 # Usage
 
-Run the makefile in /src with "make" in a terminal to build the compiler executable.
+Run the Makefile with "make" in a terminal to build the compiler executable.
 
 The compiler takes a source file as argument, prints any errors or warnings for the compilation and creates in the working directory a .mod SM25 bytecode module and optionally a .lst listing file for the source code and any warnings/errors.
 
